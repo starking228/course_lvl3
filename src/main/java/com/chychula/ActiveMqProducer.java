@@ -14,8 +14,9 @@ public class ActiveMqProducer implements AutoCloseable {
     private final Connection connection;
     private final Session session;
     private final MessageProducer producer;
-    private final ObjectMapper mapper = new ObjectMapper();
-
+//    private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+private final ObjectMapper mapper = new ObjectMapper()
+        .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
     public ActiveMqProducer() throws JMSException {
         ConnectionFactory factory = new ActiveMQConnectionFactory(BROKER_URL);
         this.connection = factory.createConnection();
