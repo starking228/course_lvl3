@@ -6,15 +6,20 @@ import javax.jms.*;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 
+import java.util.Properties;
+
 public class ActiveMqProducer implements AutoCloseable {
 
     private static final String BROKER_URL = "tcp://localhost:61616";
-    private static final String QUEUE_NAME = "messages.queue";
+//    private static final String QUEUE_NAME = "messagesP.queue";
 
     private final Connection connection;
     private final Session session;
     private final MessageProducer producer;
 //    private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+    private final Properties properties = PropertiesUtil.getLoadedProperties("config.properties");
+    private final String QUEUE_NAME = properties.getProperty("QueueName", "defaultName");
+
 private final ObjectMapper mapper = new ObjectMapper()
         .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
     public ActiveMqProducer() throws JMSException {
