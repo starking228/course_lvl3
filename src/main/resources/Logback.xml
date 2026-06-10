@@ -8,6 +8,6 @@
     </appender>
 
     <root level="INFO">
-        <appender-ref ref="LogBackConsole" />
+        <appender-ref ref="LogBackConsole"/>
     </root>
 </configuration>
