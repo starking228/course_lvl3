@@ -3,11 +3,11 @@ package com.chychula;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.JMSException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
 
 public class Main {
@@ -22,6 +22,10 @@ public class Main {
         }
 
         int numberOfMessages = Integer.parseInt(args[0]);
+        if (numberOfMessages < 1_000_000) {
+            throw new IllegalArgumentException(
+                    "N must be >= 1_000_000");
+        }
 
         // 🔹 load config
         Properties properties = PropertiesUtil.getLoadedProperties("config.properties");
@@ -31,6 +35,7 @@ public class Main {
 
         BlockingQueue<Message> queue = new LinkedBlockingQueue<>(50_000);
         List<ActiveMqProducer> producers = new ArrayList<>();
+        AtomicLong sentCounter = new AtomicLong();
 
         for (int i = 0; i < workerCount; i++) {
             producers.add(new ActiveMqProducer());
@@ -57,6 +62,7 @@ public class Main {
 
                         try {
                             producer.send(msg);
+                            sentCounter.incrementAndGet();
                         } catch (Exception e) {
                             logger.error("Send failed", e);
                         }
@@ -69,20 +75,22 @@ public class Main {
 
         // 🔹 generator (Stream як в ТЗ)
         IntStream.range(0, numberOfMessages)
+                .takeWhile(i -> System.currentTimeMillis() - startTime <= maxTimeMs)
                 .forEach(i -> {
-
-                    // ⏱ TIME STOP
-                    if (System.currentTimeMillis() - startTime > maxTimeMs) {
-                        logger.info("Time limit reached, stopping generation at {}", i);
-                        throw new RuntimeException("STOP"); // зупинка stream
-                    }
-
                     try {
                         queue.put(RandomMessageUtil.generateMessage());
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }
                 });
+
+        boolean timeExceeded = System.currentTimeMillis() - startTime > maxTimeMs;
+
+        if (timeExceeded) {
+            logger.info("Time limit reached");
+        } else {
+            logger.info("All messages generated");
+        }
 
         // 🔹 poison pills
         for (int i = 0; i < workerCount; i++) {
@@ -97,8 +105,12 @@ public class Main {
         }
 
         long endTime = System.currentTimeMillis();
+        long sentMessages = sentCounter.get();
+        double seconds = (endTime - startTime) / 1000.0;
+        double msgPerSec = sentMessages / seconds;
 
-        logger.info("Time: {} ms", (endTime - startTime));
-        logger.info("Done");
+        logger.info("Sent messages: {}", sentMessages);
+        logger.info("Execution time: {} sec", String.format("%.2f", seconds));
+        logger.info("Throughput: {} msg/sec", String.format("%.2f", msgPerSec));
     }
 }
