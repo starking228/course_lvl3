@@ -3,6 +3,7 @@ package com.chychula;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -13,6 +14,8 @@ public class ConsumerRunner {
 
     private static final Logger logger =
             LoggerFactory.getLogger(ConsumerRunner.class);
+    AtomicLong validCounter = new AtomicLong();
+    AtomicLong invalidCounter = new AtomicLong();
 
     public void run() throws Exception {
 
@@ -26,6 +29,14 @@ public class ConsumerRunner {
 
         ExecutorService executor =
                 Executors.newFixedThreadPool(workerCount);
+
+        ValidationService validationService =
+                new ValidationService(List.of(
+                        new NameLengthValidator(),
+                        new NameContainsAValidator(),
+                        new CountValidator(),
+                        new EddrValidator()
+                ));
 
         for (int i = 0; i < workerCount; i++) {
 
@@ -42,7 +53,14 @@ public class ConsumerRunner {
                             break;
                         }
 
+                        ValidationResult result =
+                                validationService.validate(msg);
                         receivedCounter.incrementAndGet();
+                        if (result.isValid()) {
+                            validCounter.incrementAndGet();
+                        } else {
+                            invalidCounter.incrementAndGet();
+                        }
                     }
 
                 } catch (Exception e) {
@@ -55,7 +73,8 @@ public class ConsumerRunner {
         executor.awaitTermination(1, TimeUnit.HOURS);
 
         logger.info("All messages processed");
-        logger.info("Received messages: {}",
-                receivedCounter.get());
+        logger.info("Received: {}", receivedCounter.get());
+        logger.info("Valid: {}", validCounter.get());
+        logger.info("Invalid: {}", invalidCounter.get());
     }
 }

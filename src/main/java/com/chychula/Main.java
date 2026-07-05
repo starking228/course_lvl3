@@ -1,5 +1,9 @@
 package com.chychula;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 public class Main {
 
     public static void main(String[] args) throws Exception {
@@ -16,10 +20,25 @@ public class Main {
                     "N must be >= 1_000_000");
         }
 
-        ProducerRunner producerRunner = new ProducerRunner();
-        producerRunner.run(numberOfMessages);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
 
-        ConsumerRunner consumerRunner = new ConsumerRunner();
-        consumerRunner.run();
+        executor.submit(() -> {
+            try {
+                new ConsumerRunner().run();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        executor.submit(() -> {
+            try {
+                new ProducerRunner().run(numberOfMessages);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        executor.shutdown();
+        executor.awaitTermination(1, TimeUnit.HOURS);
     }
 }
