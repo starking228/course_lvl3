@@ -18,5 +18,8 @@ public class Main {
 
         ProducerRunner producerRunner = new ProducerRunner();
         producerRunner.run(numberOfMessages);
+
+        ConsumerRunner consumerRunner = new ConsumerRunner();
+        consumerRunner.run();
     }
 }
