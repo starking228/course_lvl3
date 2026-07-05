@@ -30,6 +30,8 @@ public class ConsumerRunner {
         ExecutorService executor =
                 Executors.newFixedThreadPool(workerCount);
 
+        CsvWriter csvWriter = new CsvWriter();
+
         ValidationService validationService =
                 new ValidationService(List.of(
                         new NameLengthValidator(),
@@ -56,10 +58,13 @@ public class ConsumerRunner {
                         ValidationResult result =
                                 validationService.validate(msg);
                         receivedCounter.incrementAndGet();
+
                         if (result.isValid()) {
                             validCounter.incrementAndGet();
+                            csvWriter.writeValid(msg);
                         } else {
                             invalidCounter.incrementAndGet();
+                            csvWriter.writeInvalid(msg, result);
                         }
                     }
 
@@ -71,6 +76,7 @@ public class ConsumerRunner {
 
         executor.shutdown();
         executor.awaitTermination(1, TimeUnit.HOURS);
+        csvWriter.close();
 
         logger.info("All messages processed");
         logger.info("Received: {}", receivedCounter.get());

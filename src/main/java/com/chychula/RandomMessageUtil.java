@@ -9,7 +9,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class RandomMessageUtil {
     private static final Faker faker = new Faker();
-    private static final double INVALID_RATE = 0.30;
+    private static final double INVALID_RATE = 0.1;
 
     public static String generateName() {
         return faker.name().firstName();
