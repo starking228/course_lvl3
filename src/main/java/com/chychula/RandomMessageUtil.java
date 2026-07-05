@@ -6,12 +6,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.Random;
 
 public class RandomMessageUtil {
     private static final Faker faker = new Faker();
-//    private static final Random random = new Random();
-
+    private static final double INVALID_RATE = 0.30;
 
     public static String generateName() {
         return faker.name().firstName();
@@ -21,14 +19,13 @@ public class RandomMessageUtil {
         int year = ThreadLocalRandom.current().nextInt(1900, 2026); // 1900-2025
         int month = ThreadLocalRandom.current().nextInt(1, 13);
 
-        // Визначаємо кількість днів у місяці з урахуванням високосних років
         int day;
         switch (month) {
             case 2:
                 if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) {
-                    day = ThreadLocalRandom.current().nextInt(1, 30); // 1-29
+                    day = ThreadLocalRandom.current().nextInt(1, 30);
                 } else {
-                    day = ThreadLocalRandom.current().nextInt(1, 29); // 1-28
+                    day = ThreadLocalRandom.current().nextInt(1, 29);
                 }
                 break;
             case 4, 6, 9, 11:
@@ -69,11 +66,29 @@ public class RandomMessageUtil {
     }
 
     public static Message generateMessage() {
-        return new Message(
+
+        Message message = new Message(
                 generateName(),
                 generateEddr(),
                 generateCount(),
                 generateCreatedAt()
         );
+
+        if (ThreadLocalRandom.current().nextDouble() < INVALID_RATE) {
+            corruptMessage(message);
+        }
+
+        return message;
+    }
+
+    private static void corruptMessage(Message message) {
+
+        switch (ThreadLocalRandom.current().nextInt(2)) {
+
+            case 0 -> message.setCount(
+                    ThreadLocalRandom.current().nextInt(0, 10)
+            );
+            case 1 -> message.setEddr("INVALID");
+        }
     }
 }
