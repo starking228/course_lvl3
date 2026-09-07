@@ -15,7 +15,7 @@ public class Main {
 
         int numberOfMessages = Integer.parseInt(args[0]);
 
-        if (numberOfMessages < 1_000_000) {
+        if (numberOfMessages < 1000000) {
             throw new IllegalArgumentException(
                     "N must be >= 1_000_000");
         }
