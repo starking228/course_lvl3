@@ -14,7 +14,7 @@ public class NameContainsAValidatorTest {
     @ParameterizedTest(name = "Invalid name test {index}: name={0}")
     @ValueSource(strings = {
             "John",
-            "Michael",
+            "Miki",
             "Robert",
             "Ihor"
     })
