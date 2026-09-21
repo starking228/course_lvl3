@@ -1,5 +1,7 @@
-package com.chychula;
+package com.chychula.consumer;
 
+import com.chychula.Message;
+import com.chychula.PropertiesUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -29,7 +31,7 @@ public class ActiveMqConsumer implements AutoCloseable {
         this.consumer = session.createConsumer(destination);
     }
 
-    public Message receive() throws JMSException {
+    public com.chychula.Message receive() throws JMSException {
         javax.jms.Message jmsMsg = consumer.receive(2000);
 
         if (jmsMsg == null) {
@@ -43,13 +45,13 @@ public class ActiveMqConsumer implements AutoCloseable {
         String json;
         try {
             json = ((TextMessage) jmsMsg).getText();
-            return mapper.readValue(json, Message.class);
+            return mapper.readValue(json, com.chychula.Message.class);
         } catch (Exception e) {
             throw new RuntimeException("Failed to deserialize message", e);
         }
     }
 
-    public Message receive(long timeoutMs)
+    public com.chychula.Message receive(long timeoutMs)
             throws JMSException, JsonProcessingException {
 
         javax.jms.Message jmsMessage =

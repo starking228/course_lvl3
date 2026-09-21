@@ -1,4 +1,4 @@
-package com.chychula;
+package com.chychula.validators;
 
 import com.chychula.Message;
 

@@ -1,4 +1,4 @@
-package com.chychula;
+package com.chychula.csv;
 
 public class InvalidCsvRecord {
 

@@ -1,4 +1,6 @@
-package com.chychula;
+package com.chychula.validators;
+
+import com.chychula.Message;
 
 public class EddrValidator implements Validator {
 

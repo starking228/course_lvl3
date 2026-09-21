@@ -1,5 +1,6 @@
 package com.chychula;
 
+import com.chychula.validators.EddrValidator;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 

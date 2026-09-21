@@ -1,5 +1,8 @@
-package com.chychula;
+package com.chychula.producer;
 
+import com.chychula.Message;
+import com.chychula.PropertiesUtil;
+import com.chychula.RandomMessageUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

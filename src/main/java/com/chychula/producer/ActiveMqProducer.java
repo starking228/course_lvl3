@@ -1,5 +1,7 @@
-package com.chychula;
+package com.chychula.producer;
 
+import com.chychula.Message;
+import com.chychula.PropertiesUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.jms.*;
