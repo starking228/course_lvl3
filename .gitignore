@@ -40,3 +40,4 @@ build/
 ### Custom ###
 valid.csv
 invalid.csv
+*.csv

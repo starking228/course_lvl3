@@ -1,5 +1,8 @@
 package com.chychula;
 
+import com.chychula.consumer.ConsumerRunner;
+import com.chychula.producer.ProducerRunner;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
