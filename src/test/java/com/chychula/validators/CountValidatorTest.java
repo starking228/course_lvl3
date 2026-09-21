@@ -1,6 +1,6 @@
-package com.chychula;
+package com.chychula.validators;
 
-import com.chychula.validators.CountValidator;
+import com.chychula.Message;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
