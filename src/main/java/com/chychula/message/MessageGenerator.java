@@ -33,15 +33,15 @@ public class MessageGenerator {
         long startTime = System.currentTimeMillis();
         long maxTimeMs = TimeUnit.SECONDS.toMillis(maxTimeSec);
 
-        IntStream.range(0, numberOfMessages)
+        IntStream.range(1, numberOfMessages+1)
                 .takeWhile(i ->
                         isWithinTimeLimit(startTime, maxTimeMs))
                 .forEach(i -> {
                     try {
                         queue.put(RandomMessageUtil.generateMessage());
                         long messagesCount = generatedMessages.incrementAndGet();
-                        if (i % 100_000 == 0 && i != 0) {
-                            logger.info("Generated messages: {}", i + 1);
+                        if (i % 100_000 == 0) {
+                            logger.info("Generated messages: {}", i);
                         }
 
                     } catch (InterruptedException e) {
