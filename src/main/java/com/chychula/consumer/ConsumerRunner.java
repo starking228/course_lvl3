@@ -45,6 +45,7 @@ public class ConsumerRunner {
 
         for (int i = 0; i < workerCount; i++) {
 
+            logger.info("Consumers started");
             executor.submit(() -> {
 
                 try (ActiveMqConsumer consumer =
@@ -60,8 +61,10 @@ public class ConsumerRunner {
 
                         ValidationResult result =
                                 validationService.validate(msg);
-                        receivedCounter.incrementAndGet();
-
+                        long received = receivedCounter.incrementAndGet();
+                        if (received % 100_000 == 0) {
+                            logger.info("Received messages: {}", received);
+                        }
                         if (result.isValid()) {
                             validCounter.incrementAndGet();
                             csvWriter.writeValid(msg);
@@ -79,6 +82,7 @@ public class ConsumerRunner {
 
         executor.shutdown();
         executor.awaitTermination(1, TimeUnit.HOURS);
+        logger.info("Consumers finished");
         csvWriter.close();
 
         logger.info("All messages processed");

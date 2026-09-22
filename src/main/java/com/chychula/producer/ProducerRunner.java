@@ -49,7 +49,8 @@ public class ProducerRunner {
         long startTime = System.currentTimeMillis();
         long maxTimeMs = TimeUnit.SECONDS.toMillis(maxTimeSec);
 
-        // workers
+        // Producers
+        logger.info("Producers started");
         for (int i = 0; i < workerCount; i++) {
 
             ActiveMqProducer producer = producers.get(i);
@@ -67,7 +68,10 @@ public class ProducerRunner {
                         }
 
                         producer.send(msg);
-                        sentCounter.incrementAndGet();
+                        long sent = sentCounter.incrementAndGet();
+                        if (sent % 100_000 == 0) {
+                            logger.info("Sent messages: {}", sent);
+                        }
                     }
 
                 } catch (Exception e) {
@@ -77,12 +81,16 @@ public class ProducerRunner {
         }
 
         // generator
+        logger.info("Generator started");
         IntStream.range(0, numberOfMessages)
                 .takeWhile(i ->
                         System.currentTimeMillis() - startTime <= maxTimeMs)
                 .forEach(i -> {
                     try {
                         queue.put(RandomMessageUtil.generateMessage());
+                        if (i % 100_000 == 0) {
+                            logger.info("Generated messages: {}", i + 1);
+                        }
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }
@@ -100,9 +108,11 @@ public class ProducerRunner {
         for (int i = 0; i < workerCount; i++) {
             queue.put(POISON);
         }
+        logger.info("Generator finished");
 
         executor.shutdown();
         executor.awaitTermination(1, TimeUnit.HOURS);
+        logger.info("Producers finished");
 
         for (ActiveMqProducer producer : producers) {
             producer.close();
