@@ -25,13 +25,13 @@ public class ConsumerRunner {
         Properties properties =
                 PropertiesUtil.getLoadedProperties("config.properties");
 
-        int workerCount =
-                Integer.parseInt(properties.getProperty("WorkerCount", "16"));
+        int consumersCount =
+                Integer.parseInt(properties.getProperty("ConsumersCount", "16"));
 
         AtomicLong receivedCounter = new AtomicLong();
 
         ExecutorService executor =
-                Executors.newFixedThreadPool(workerCount);
+                Executors.newFixedThreadPool(consumersCount);
 
         CsvWriter csvWriter = new CsvWriter();
 
@@ -43,9 +43,9 @@ public class ConsumerRunner {
                         new EddrValidator()
                 ));
 
-        for (int i = 0; i < workerCount; i++) {
+        logger.info("Consumers started");
+        for (int i = 0; i < consumersCount; i++) {
 
-            logger.info("Consumers started");
             executor.submit(() -> {
 
                 try (ActiveMqConsumer consumer =
@@ -53,9 +53,9 @@ public class ConsumerRunner {
 
                     while (true) {
 
-                        Message msg = consumer.receive(5000);
+                        Message msg = consumer.receive();
 
-                        if (msg == null) {
+                        if ("__POISON__".equals(msg.getName())) {
                             break;
                         }
 
