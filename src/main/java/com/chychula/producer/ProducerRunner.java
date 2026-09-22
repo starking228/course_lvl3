@@ -88,7 +88,7 @@ public class ProducerRunner {
                 .forEach(i -> {
                     try {
                         queue.put(RandomMessageUtil.generateMessage());
-                        if (i % 100_000 == 0) {
+                        if (i % 100_000 == 0 && i!=0) {
                             logger.info("Generated messages: {}", i + 1);
                         }
                     } catch (InterruptedException e) {
