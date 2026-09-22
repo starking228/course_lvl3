@@ -31,10 +31,6 @@ public class ActiveMqConsumer implements AutoCloseable {
         this.consumer = session.createConsumer(destination);
     }
 
-    public boolean isPoison(Message message) {
-        return "__POISON__".equals(message.getName());
-    }
-
     public com.chychula.Message receive() throws JMSException {
         javax.jms.Message jmsMsg = consumer.receive(2000);
 
