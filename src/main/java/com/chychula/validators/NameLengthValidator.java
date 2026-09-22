@@ -1,6 +1,6 @@
 package com.chychula.validators;
 
-import com.chychula.Message;
+import com.chychula.message.Message;
 
 public class NameLengthValidator implements Validator {
 

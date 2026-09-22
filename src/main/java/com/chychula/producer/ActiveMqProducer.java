@@ -1,6 +1,6 @@
 package com.chychula.producer;
 
-import com.chychula.Message;
+import com.chychula.message.Message;
 import com.chychula.PropertiesUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -15,7 +15,6 @@ public class ActiveMqProducer implements AutoCloseable {
     private final Connection connection;
     private final Session session;
     private final MessageProducer producer;
-    //    private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
     private final Properties properties = PropertiesUtil.getLoadedProperties("config.properties");
     private final String QUEUE_NAME = properties.getProperty("QueueName", "defaultName");
     private final String BROKER_URL = properties.getProperty("BrokerURL", "tcp://localhost:61616");

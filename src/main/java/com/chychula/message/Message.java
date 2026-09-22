@@ -1,4 +1,4 @@
-package com.chychula;
+package com.chychula.message;
 
 import java.io.Serial;
 import java.io.Serializable;

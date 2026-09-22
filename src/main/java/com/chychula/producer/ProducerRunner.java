@@ -1,8 +1,8 @@
 package com.chychula.producer;
 
-import com.chychula.Message;
+import com.chychula.message.Message;
+import com.chychula.message.MessageGenerator;
 import com.chychula.PropertiesUtil;
-import com.chychula.RandomMessageUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.IntStream;
 
 public class ProducerRunner {
 
@@ -26,11 +25,12 @@ public class ProducerRunner {
         Properties properties =
                 PropertiesUtil.getLoadedProperties("config.properties");
 
-        int maxTimeSec =
-                Integer.parseInt(properties.getProperty("MaxTime", "90"));
-
         int producersCount =
                 Integer.parseInt(properties.getProperty("ProducersCount", "16"));
+
+        int consumersCount =
+                Integer.parseInt(properties.getProperty("ConsumersCount", "16"));
+
 
         BlockingQueue<Message> queue =
                 new LinkedBlockingQueue<>(50_000);
@@ -45,13 +45,14 @@ public class ProducerRunner {
 
         ExecutorService executor =
                 Executors.newFixedThreadPool(producersCount);
+        MessageGenerator generator = new MessageGenerator();
 
-        long startTime = System.currentTimeMillis();
-        long maxTimeMs = TimeUnit.SECONDS.toMillis(maxTimeSec);
 
         // Producers
-        logger.info("Producers started");
-        for (int i = 0; i < producersCount; i++) {
+        long startTime = System.currentTimeMillis();
+        logger.info("{} Producers started", producers.size());
+
+        for (int i = 0; i < producers.size(); i++) {
 
             ActiveMqProducer producer = producers.get(i);
 
@@ -81,43 +82,17 @@ public class ProducerRunner {
         }
 
         // generator
-        logger.info("Generator started");
-        IntStream.range(0, numberOfMessages)
-                .takeWhile(i ->
-                        System.currentTimeMillis() - startTime <= maxTimeMs)
-                .forEach(i -> {
-                    try {
-                        queue.put(RandomMessageUtil.generateMessage());
-                        if (i % 100_000 == 0 && i!=0) {
-                            logger.info("Generated messages: {}", i + 1);
-                        }
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                });
-
-        boolean timeExceeded =
-                System.currentTimeMillis() - startTime > maxTimeMs;
-
-        if (timeExceeded) {
-            logger.info("Time limit reached");
-        } else {
-            logger.info("All messages generated");
-        }
-
-        for (int i = 0; i < producersCount; i++) {
-            queue.put(POISON);
-        }
-        logger.info("Generator finished");
+        generator.generateMessages(
+                queue,
+                numberOfMessages,
+                producersCount
+        );
 
         executor.shutdown();
         executor.awaitTermination(1, TimeUnit.HOURS);
-
-        for (int i = 0; i < producersCount; i++) {
-            producers.get(0).send(POISON);
+        for (int i = 0; i < consumersCount; i++) {
+            producers.getFirst().send(POISON);
         }
-        logger.info("Producers finished");
-
         for (ActiveMqProducer producer : producers) {
             producer.close();
         }

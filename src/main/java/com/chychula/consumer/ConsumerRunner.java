@@ -2,6 +2,7 @@ package com.chychula.consumer;
 
 import com.chychula.*;
 import com.chychula.csv.CsvWriter;
+import com.chychula.message.Message;
 import com.chychula.validators.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -8,7 +8,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class Main {
-    // trigger for test jenkins
     public static void main(String[] args) throws Exception {
 
         if (args.length == 0) {
