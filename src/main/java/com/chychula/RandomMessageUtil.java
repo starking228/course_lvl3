@@ -1,5 +1,6 @@
 package com.chychula;
 
+import com.chychula.message.Message;
 import com.github.javafaker.Faker;
 
 import java.time.LocalDate;

@@ -1,6 +1,6 @@
 package com.chychula.csv;
 
-import com.chychula.Message;
+import com.chychula.message.Message;
 import com.chychula.PropertiesUtil;
 import com.chychula.validators.ValidationResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
