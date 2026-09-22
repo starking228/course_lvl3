@@ -29,8 +29,8 @@ public class ProducerRunner {
         int maxTimeSec =
                 Integer.parseInt(properties.getProperty("MaxTime", "90"));
 
-        int workerCount =
-                Integer.parseInt(properties.getProperty("WorkerCount", "16"));
+        int producersCount =
+                Integer.parseInt(properties.getProperty("ProducersCount", "16"));
 
         BlockingQueue<Message> queue =
                 new LinkedBlockingQueue<>(50_000);
@@ -39,19 +39,19 @@ public class ProducerRunner {
 
         AtomicLong sentCounter = new AtomicLong();
 
-        for (int i = 0; i < workerCount; i++) {
+        for (int i = 0; i < producersCount; i++) {
             producers.add(new ActiveMqProducer());
         }
 
         ExecutorService executor =
-                Executors.newFixedThreadPool(workerCount);
+                Executors.newFixedThreadPool(producersCount);
 
         long startTime = System.currentTimeMillis();
         long maxTimeMs = TimeUnit.SECONDS.toMillis(maxTimeSec);
 
         // Producers
         logger.info("Producers started");
-        for (int i = 0; i < workerCount; i++) {
+        for (int i = 0; i < producersCount; i++) {
 
             ActiveMqProducer producer = producers.get(i);
 
@@ -105,13 +105,17 @@ public class ProducerRunner {
             logger.info("All messages generated");
         }
 
-        for (int i = 0; i < workerCount; i++) {
+        for (int i = 0; i < producersCount; i++) {
             queue.put(POISON);
         }
         logger.info("Generator finished");
 
         executor.shutdown();
         executor.awaitTermination(1, TimeUnit.HOURS);
+
+        for (int i = 0; i < producersCount; i++) {
+            producers.get(0).send(POISON);
+        }
         logger.info("Producers finished");
 
         for (ActiveMqProducer producer : producers) {
