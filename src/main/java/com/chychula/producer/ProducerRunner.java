@@ -6,6 +6,7 @@ import com.chychula.PropertiesUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jms.JMSException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -20,7 +21,7 @@ public class ProducerRunner {
     private static final Message POISON =
             new Message("__POISON__", "", -1, null);
 
-    public void run(int numberOfMessages) throws Exception {
+    public void run(int numberOfMessages, int maxTime) throws Exception {
 
         Properties properties =
                 PropertiesUtil.getLoadedProperties("config.properties");
@@ -40,7 +41,7 @@ public class ProducerRunner {
         AtomicLong sentCounter = new AtomicLong();
 
         for (int i = 0; i < producersCount; i++) {
-            producers.add(new ActiveMqProducer());
+            producers.add(createProducer());
         }
 
         ExecutorService executor =
@@ -85,7 +86,8 @@ public class ProducerRunner {
         generator.generateMessages(
                 queue,
                 numberOfMessages,
-                producersCount
+                producersCount,
+                maxTime
         );
 
         executor.shutdown();
@@ -109,5 +111,9 @@ public class ProducerRunner {
                 String.format("%.2f", seconds));
         logger.info("Throughput: {} msg/sec",
                 String.format("%.2f", msgPerSec));
+    }
+
+    protected ActiveMqProducer createProducer() throws JMSException {
+        return new ActiveMqProducer();
     }
 }

@@ -18,17 +18,12 @@ public class MessageGenerator {
     private static final Message POISON =
             new Message("__POISON__", "", -1, null);
 
-    public void generateMessages(
+    public long generateMessages(
             BlockingQueue<Message> queue,
             int numberOfMessages,
-            int producersCount
-    ) throws InterruptedException {
+            int producersCount,
+            int maxTimeSec) throws InterruptedException {
 
-        Properties properties =
-                PropertiesUtil.getLoadedProperties("config.properties");
-
-        int maxTimeSec =
-                Integer.parseInt(properties.getProperty("MaxTime", "90"));
         AtomicLong generatedMessages = new AtomicLong();
         long startTime = System.currentTimeMillis();
         long maxTimeMs = TimeUnit.SECONDS.toMillis(maxTimeSec);
@@ -39,7 +34,7 @@ public class MessageGenerator {
                 .forEach(i -> {
                     try {
                         queue.put(RandomMessageUtil.generateMessage());
-                        long messagesCount = generatedMessages.incrementAndGet();
+                        generatedMessages.incrementAndGet();
                         if (i % 100_000 == 0) {
                             logger.info("Generated messages: {}", i);
                         }
@@ -63,6 +58,9 @@ public class MessageGenerator {
 
         logger.info("Generator finished");
         logger.info("Generated messages: {}", generatedMessages.get());
+
+        return generatedMessages.get();
+
     }
 
     public boolean isWithinTimeLimit(

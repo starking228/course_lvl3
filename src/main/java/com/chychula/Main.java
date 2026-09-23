@@ -3,6 +3,7 @@ package com.chychula;
 import com.chychula.consumer.ConsumerRunner;
 import com.chychula.producer.ProducerRunner;
 
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -22,6 +23,11 @@ public class Main {
                     "N must be >= 1_000_000");
         }
 
+        Properties properties =
+                PropertiesUtil.getLoadedProperties("config.properties");
+        int maxTimeSec =
+                Integer.parseInt(properties.getProperty("MaxTime", "90"));
+
         ExecutorService executor = Executors.newFixedThreadPool(2);
 
         executor.submit(() -> {
@@ -34,7 +40,7 @@ public class Main {
 
         executor.submit(() -> {
             try {
-                new ProducerRunner().run(numberOfMessages);
+                new ProducerRunner().run(numberOfMessages, maxTimeSec);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
