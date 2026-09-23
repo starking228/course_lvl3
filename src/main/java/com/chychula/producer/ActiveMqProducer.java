@@ -31,7 +31,7 @@ public class ActiveMqProducer implements AutoCloseable {
         this.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Destination destination = session.createQueue(QUEUE_NAME);
         this.producer = session.createProducer(destination);
-        this.producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+        this.producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
     }
 
     public void send(Message message) {
