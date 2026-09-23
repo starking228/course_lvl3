@@ -1,10 +1,15 @@
 package com.chychula;
 
+import com.chychula.message.Message;
 import com.chychula.message.MessageGenerator;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -44,6 +49,30 @@ public class MessageGeneratorTest {
                         ", maxTimeMs=" + maxTimeMs +
                         ", expected=" + expected +
                         ", actual=" + actual
+        );
+    }
+
+    @Test
+    void shouldGenerateAllMessagesWithinTimeLimit() throws InterruptedException {
+        MessageGenerator generator = new MessageGenerator();
+
+        BlockingQueue<Message> queue = new LinkedBlockingQueue<>();
+
+        int numberOfMessages = 1000;
+        int producersCount = 2;
+        int maxTimeSec = 10;
+
+        long generatedMessages = generator.generateMessages(
+                queue,
+                numberOfMessages,
+                producersCount,
+                maxTimeSec
+        );
+
+        assertEquals(
+                numberOfMessages,
+                generatedMessages,
+                "Generated messages count does not match expected count"
         );
     }
 }
