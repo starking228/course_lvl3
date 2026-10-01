@@ -50,6 +50,7 @@ public class ConsumerRunner {
 
                         Message msg = consumer.receive();
 
+                        if (msg == null) {  continue; }
                         if ("__POISON__".equals(msg.getName())) {
                             break;
                         }
