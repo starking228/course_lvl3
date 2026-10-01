@@ -48,15 +48,33 @@ public class ProducerRunner {
 
         MessageGenerator generator = new MessageGenerator();
 
-        long startTime = System.currentTimeMillis();
-        long maxTimeMs = TimeUnit.SECONDS.toMillis(maxTime);
+        /*
+         * Використовується тільки для контролю MaxTime.
+         */
+        long generationStartTime = System.currentTimeMillis();
+
+        long maxTimeMs =
+                TimeUnit.SECONDS.toMillis(maxTime);
+
+        /*
+         * Використовується тільки для точного
+         * вимірювання швидкості producer.
+         */
+        long measurementStartTime = System.nanoTime();
 
         logger.info("{} Producers started", producersCount);
 
         List<Future<Long>> futures = new ArrayList<>();
 
-        int baseMessages = numberOfMessages / producersCount;
-        int remainder = numberOfMessages % producersCount;
+        /*
+         * Розподіляємо загальну кількість повідомлень
+         * між producer-потоками.
+         */
+        int baseMessages =
+                numberOfMessages / producersCount;
+
+        int remainder =
+                numberOfMessages % producersCount;
 
         int start = 1;
 
@@ -65,44 +83,61 @@ public class ProducerRunner {
             int messagesForProducer =
                     baseMessages + (i < remainder ? 1 : 0);
 
-            int end = start + messagesForProducer;
+            int end =
+                    start + messagesForProducer;
 
-            ActiveMqProducer producer = producers.get(i);
+            ActiveMqProducer producer =
+                    producers.get(i);
 
             int producerStart = start;
             int producerEnd = end;
 
-            Future<Long> future = executor.submit(() ->
-                    generator.generateMessages(
-                            producer,
-                            producerStart,
-                            producerEnd,
-                            startTime,
-                            maxTimeMs,
-                            generatedCounter,
-                            sentCounter
-                    )
-            );
+            Future<Long> future =
+                    executor.submit(() ->
+                            generator.generateMessages(
+                                    producer,
+                                    producerStart,
+                                    producerEnd,
+                                    generationStartTime,
+                                    maxTimeMs,
+                                    generatedCounter,
+                                    sentCounter
+                            )
+                    );
 
             futures.add(future);
 
             start = end;
         }
 
+        /*
+         * Чекаємо завершення всіх producer-потоків.
+         */
         for (Future<Long> future : futures) {
             future.get();
         }
 
-        long endTime = System.nanoTime();
+        /*
+         * Фіксуємо кінець саме генерації + відправки.
+         * Poison pills і close() у цей замір не входять.
+         */
+        long measurementEndTime = System.nanoTime();
 
         executor.shutdown();
-        executor.awaitTermination(1, TimeUnit.HOURS);
+
+        if (!executor.awaitTermination(
+                1,
+                TimeUnit.HOURS)) {
+
+            logger.warn("Producer executor did not terminate in time");
+        }
 
         /*
          * Відправляємо poison pills після завершення
          * всіх producer-потоків.
          */
         for (int i = 0; i < consumersCount; i++) {
+
             ActiveMqProducer producer =
                     producers.get(i % producers.size());
 
@@ -113,10 +148,15 @@ public class ProducerRunner {
             producer.close();
         }
 
-        long sentMessages = sentCounter.get();
+        long generatedMessages =
+                generatedCounter.get();
+
+        long sentMessages =
+                sentCounter.get();
 
         double seconds =
-                (endTime - startTime) / 1_000_000_000.0;
+                (measurementEndTime - measurementStartTime)
+                        / 1_000_000_000.0;
 
         double msgPerSec =
                 seconds > 0
@@ -124,7 +164,7 @@ public class ProducerRunner {
                         : 0;
 
         logger.info("Generated messages: {}",
-                generatedCounter.get());
+                generatedMessages);
 
         logger.info("Sent messages: {}",
                 sentMessages);
