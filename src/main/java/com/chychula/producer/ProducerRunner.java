@@ -48,28 +48,19 @@ public class ProducerRunner {
 
         MessageGenerator generator = new MessageGenerator();
 
-        /*
-         * Використовується тільки для контролю MaxTime.
-         */
+
         long generationStartTime = System.currentTimeMillis();
 
         long maxTimeMs =
                 TimeUnit.SECONDS.toMillis(maxTime);
 
-        /*
-         * Використовується тільки для точного
-         * вимірювання швидкості producer.
-         */
         long measurementStartTime = System.nanoTime();
 
         logger.info("{} Producers started", producersCount);
 
         List<Future<Long>> futures = new ArrayList<>();
 
-        /*
-         * Розподіляємо загальну кількість повідомлень
-         * між producer-потоками.
-         */
+
         int baseMessages =
                 numberOfMessages / producersCount;
 
@@ -110,17 +101,12 @@ public class ProducerRunner {
             start = end;
         }
 
-        /*
-         * Чекаємо завершення всіх producer-потоків.
-         */
+
         for (Future<Long> future : futures) {
             future.get();
         }
 
-        /*
-         * Фіксуємо кінець саме генерації + відправки.
-         * Poison pills і close() у цей замір не входять.
-         */
+
         long measurementEndTime = System.nanoTime();
 
         executor.shutdown();
@@ -132,10 +118,6 @@ public class ProducerRunner {
             logger.warn("Producer executor did not terminate in time");
         }
 
-        /*
-         * Відправляємо poison pills після завершення
-         * всіх producer-потоків.
-         */
         for (int i = 0; i < consumersCount; i++) {
 
             ActiveMqProducer producer =
