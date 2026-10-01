@@ -1,5 +1,9 @@
 package com.chychula.message;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -8,9 +12,12 @@ public class Message implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
+    @Size(min = 7, message = "Name must contain at least 7 characters")
+    @Pattern(regexp = ".*[aA].*", message = "Name must contain the letter 'a'")
     private String name;
+    @Pattern(regexp = "\\d{8}-\\d{5}", message = "Invalid EDDR format")
     private String eddr;
+    @Min(value = 10, message = "Count must be at least 10")
     private int count;
     private LocalDateTime createdAt;
 

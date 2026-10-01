@@ -1,29 +1,33 @@
 package com.chychula.validators;
 
 import com.chychula.message.Message;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 
-import java.util.List;
+import java.util.Set;
 
 public class ValidationService {
 
-    private final List<Validator> validators;
+    private final Validator validator;
 
-    public ValidationService(List<Validator> validators) {
-        this.validators = validators;
+    public ValidationService() {
+        ValidatorFactory factory =
+                Validation.buildDefaultValidatorFactory();
+
+        this.validator = factory.getValidator();
     }
 
     public ValidationResult validate(Message message) {
 
+        Set<jakarta.validation.ConstraintViolation<Message>> violations =
+                validator.validate(message);
+
         ValidationResult result = new ValidationResult();
 
-        for (Validator validator : validators) {
-
-            String error = validator.validate(message);
-
-            if (error != null) {
-                result.addError(error);
-            }
-        }
+        violations.forEach(violation ->
+                result.addError(violation.getMessage())
+        );
 
         return result;
     }
