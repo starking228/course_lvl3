@@ -48,7 +48,7 @@ public class ProducerRunner {
 
         MessageGenerator generator = new MessageGenerator();
 
-        long startTime = System.nanoTime();
+        long startTime = System.currentTimeMillis();
         long maxTimeMs = TimeUnit.SECONDS.toMillis(maxTime);
 
         logger.info("{} Producers started", producersCount);
