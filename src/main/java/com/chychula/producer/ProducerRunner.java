@@ -93,6 +93,8 @@ public class ProducerRunner {
             future.get();
         }
 
+        long endTime = System.nanoTime();
+
         executor.shutdown();
         executor.awaitTermination(1, TimeUnit.HOURS);
 
@@ -111,15 +113,15 @@ public class ProducerRunner {
             producer.close();
         }
 
-        long endTime = System.currentTimeMillis();
-
         long sentMessages = sentCounter.get();
 
         double seconds =
-                (endTime - startTime) / 1000.0;
+                (endTime - startTime) / 1_000_000_000.0;
 
         double msgPerSec =
-                sentMessages / seconds;
+                seconds > 0
+                        ? sentMessages / seconds
+                        : 0;
 
         logger.info("Generated messages: {}",
                 generatedCounter.get());
@@ -127,10 +129,10 @@ public class ProducerRunner {
         logger.info("Sent messages: {}",
                 sentMessages);
 
-        logger.info("Execution time: {} sec",
+        logger.info("Producer execution time: {} sec",
                 String.format("%.2f", seconds));
 
-        logger.info("Throughput: {} msg/sec",
+        logger.info("Producer throughput: {} msg/sec",
                 String.format("%.2f", msgPerSec));
     }
 
