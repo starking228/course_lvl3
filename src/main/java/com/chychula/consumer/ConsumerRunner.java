@@ -31,10 +31,7 @@ public class ConsumerRunner {
 
         AtomicLong receivedCounter = new AtomicLong();
 
-        /*
-         * Час першого отриманого повідомлення.
-         * compareAndSet гарантує, що час запише тільки перший consumer.
-         */
+
         AtomicLong firstMessageTime = new AtomicLong();
 
         ExecutorService executor =
@@ -62,9 +59,6 @@ public class ConsumerRunner {
                             continue;
                         }
 
-                        /*
-                         * Фіксуємо час першого реального повідомлення.
-                         */
                         firstMessageTime.compareAndSet(
                                 0,
                                 System.nanoTime()
@@ -115,9 +109,7 @@ public class ConsumerRunner {
         logger.info("Valid: {}", validCounter.get());
         logger.info("Invalid: {}", invalidCounter.get());
 
-        /*
-         * Якщо повідомлень не було, час обробки не рахуємо.
-         */
+
         if (firstMessageTime.get() != 0) {
 
             double processingSeconds =
