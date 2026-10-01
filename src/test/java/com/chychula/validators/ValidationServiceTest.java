@@ -8,17 +8,12 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ValidationServiceTest {
+class ValidationServiceTest {
 
     @Test
     void shouldDistributeMessagesByValidationResult() {
 
-        ValidationService validationService = new ValidationService(List.of(
-                new NameLengthValidator(),
-                new NameContainsAValidator(),
-                new CountValidator(),
-                new EddrValidator()
-        ));
+        ValidationService validationService = new ValidationService();
 
         List<Message> messages = List.of(
 
@@ -50,9 +45,9 @@ public class ValidationServiceTest {
         int validCount = 0;
         int invalidCount = 0;
 
-        for (Message msg : messages) {
+        for (Message message : messages) {
 
-            ValidationResult result = validationService.validate(msg);
+            ValidationResult result = validationService.validate(message);
 
             if (result.isValid()) {
                 validCount++;

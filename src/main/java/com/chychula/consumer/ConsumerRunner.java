@@ -36,13 +36,7 @@ public class ConsumerRunner {
 
         CsvWriter csvWriter = new CsvWriter();
 
-        ValidationService validationService =
-                new ValidationService(List.of(
-                        new NameLengthValidator(),
-                        new NameContainsAValidator(),
-                        new CountValidator(),
-                        new EddrValidator()
-                ));
+        ValidationService validationService = new ValidationService();
 
         logger.info("Consumers started");
         for (int i = 0; i < consumersCount; i++) {
