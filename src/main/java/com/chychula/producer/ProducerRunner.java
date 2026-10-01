@@ -118,12 +118,9 @@ public class ProducerRunner {
             logger.warn("Producer executor did not terminate in time");
         }
 
+        ActiveMqProducer poisonProducer = producers.getFirst();
         for (int i = 0; i < consumersCount; i++) {
-
-            ActiveMqProducer producer =
-                    producers.get(i % producers.size());
-
-            producer.send(POISON);
+            poisonProducer.send(POISON);
         }
 
         for (ActiveMqProducer producer : producers) {
