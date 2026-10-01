@@ -25,7 +25,9 @@ public class ActiveMqProducer implements AutoCloseable {
 
     public ActiveMqProducer() throws JMSException {
         ConnectionFactory factory = new ActiveMQConnectionFactory(BROKER_URL);
-        this.connection = factory.createConnection();
+        String username = properties.getProperty("BrokerUsername");
+        String password = properties.getProperty("BrokerPassword");
+        this.connection = factory.createConnection(username, password);
         this.connection.start();
 
         this.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
