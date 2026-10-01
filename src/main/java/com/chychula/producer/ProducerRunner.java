@@ -1,8 +1,8 @@
 package com.chychula.producer;
 
+import com.chychula.PropertiesUtil;
 import com.chychula.message.Message;
 import com.chychula.message.MessageGenerator;
-import com.chychula.PropertiesUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,18 +27,17 @@ public class ProducerRunner {
                 PropertiesUtil.getLoadedProperties("config.properties");
 
         int producersCount =
-                Integer.parseInt(properties.getProperty("ProducersCount", "16"));
+                Integer.parseInt(
+                        properties.getProperty("ProducersCount", "16"));
 
         int consumersCount =
-                Integer.parseInt(properties.getProperty("ConsumersCount", "16"));
+                Integer.parseInt(
+                        properties.getProperty("ConsumersCount", "16"));
 
-
-        BlockingQueue<Message> queue =
-                new LinkedBlockingQueue<>(50_000);
+        AtomicLong generatedCounter = new AtomicLong();
+        AtomicLong sentCounter = new AtomicLong();
 
         List<ActiveMqProducer> producers = new ArrayList<>();
-
-        AtomicLong sentCounter = new AtomicLong();
 
         for (int i = 0; i < producersCount; i++) {
             producers.add(createProducer());
@@ -46,55 +45,68 @@ public class ProducerRunner {
 
         ExecutorService executor =
                 Executors.newFixedThreadPool(producersCount);
+
         MessageGenerator generator = new MessageGenerator();
 
-
-        // Producers
         long startTime = System.currentTimeMillis();
-        logger.info("{} Producers started", producers.size());
+        long maxTimeMs = TimeUnit.SECONDS.toMillis(maxTime);
 
-        for (int i = 0; i < producers.size(); i++) {
+        logger.info("{} Producers started", producersCount);
+
+        List<Future<Long>> futures = new ArrayList<>();
+
+        int baseMessages = numberOfMessages / producersCount;
+        int remainder = numberOfMessages % producersCount;
+
+        int start = 1;
+
+        for (int i = 0; i < producersCount; i++) {
+
+            int messagesForProducer =
+                    baseMessages + (i < remainder ? 1 : 0);
+
+            int end = start + messagesForProducer;
 
             ActiveMqProducer producer = producers.get(i);
 
-            executor.submit(() -> {
+            int producerStart = start;
+            int producerEnd = end;
 
-                try {
+            Future<Long> future = executor.submit(() ->
+                    generator.generateMessages(
+                            producer,
+                            producerStart,
+                            producerEnd,
+                            startTime,
+                            maxTimeMs,
+                            generatedCounter,
+                            sentCounter
+                    )
+            );
 
-                    while (true) {
+            futures.add(future);
 
-                        Message msg = queue.take();
-
-                        if ("__POISON__".equals(msg.getName())) {
-                            break;
-                        }
-
-                        producer.send(msg);
-                        long sent = sentCounter.incrementAndGet();
-                        if (sent % 100_000 == 0) {
-                            logger.info("Sent messages: {}", sent);
-                        }
-                    }
-
-                } catch (Exception e) {
-                    logger.error("Send failed", e);
-                }
-            });
+            start = end;
         }
 
-        // generator
-        generator.generateMessages(
-                queue,
-                numberOfMessages,
-                producersCount,
-                maxTime
-        );
+        for (Future<Long> future : futures) {
+            future.get();
+        }
 
         executor.shutdown();
         executor.awaitTermination(1, TimeUnit.HOURS);
+
+        /*
+         * Відправляємо poison pills після завершення
+         * всіх producer-потоків.
+         */
         for (int i = 0; i < consumersCount; i++) {
-            producers.getFirst().send(POISON);
+            ActiveMqProducer producer =
+                    producers.get(i % producers.size());
+
+            producer.send(POISON);
         }
+
         for (ActiveMqProducer producer : producers) {
             producer.close();
         }
@@ -103,17 +115,28 @@ public class ProducerRunner {
 
         long sentMessages = sentCounter.get();
 
-        double seconds = (endTime - startTime) / 1000.0;
-        double msgPerSec = sentMessages / seconds;
+        double seconds =
+                (endTime - startTime) / 1000.0;
 
-        logger.info("Sent messages: {}", sentMessages);
+        double msgPerSec =
+                sentMessages / seconds;
+
+        logger.info("Generated messages: {}",
+                generatedCounter.get());
+
+        logger.info("Sent messages: {}",
+                sentMessages);
+
         logger.info("Execution time: {} sec",
                 String.format("%.2f", seconds));
+
         logger.info("Throughput: {} msg/sec",
                 String.format("%.2f", msgPerSec));
     }
 
-    protected ActiveMqProducer createProducer() throws JMSException {
+    protected ActiveMqProducer createProducer()
+            throws JMSException {
+
         return new ActiveMqProducer();
     }
 }

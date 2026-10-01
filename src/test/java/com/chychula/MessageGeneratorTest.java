@@ -2,16 +2,18 @@ package com.chychula;
 
 import com.chychula.message.Message;
 import com.chychula.message.MessageGenerator;
+import com.chychula.producer.ActiveMqProducer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 
 public class MessageGeneratorTest {
@@ -53,20 +55,28 @@ public class MessageGeneratorTest {
     }
 
     @Test
-    void shouldGenerateAllMessagesWithinTimeLimit() throws InterruptedException {
+    void shouldGenerateAllMessagesWithinTimeLimit() throws Exception {
         MessageGenerator generator = new MessageGenerator();
 
-        BlockingQueue<Message> queue = new LinkedBlockingQueue<>();
+        ActiveMqProducer producer = mock(ActiveMqProducer.class);
 
         int numberOfMessages = 1000;
-        int producersCount = 2;
         int maxTimeSec = 10;
 
+        AtomicLong generatedCounter = new AtomicLong();
+        AtomicLong sentCounter = new AtomicLong();
+
+        long startTime = System.currentTimeMillis();
+        long maxTimeMs = TimeUnit.SECONDS.toMillis(maxTimeSec);
+
         long generatedMessages = generator.generateMessages(
-                queue,
-                numberOfMessages,
-                producersCount,
-                maxTimeSec
+                producer,
+                1,
+                numberOfMessages + 1,
+                startTime,
+                maxTimeMs,
+                generatedCounter,
+                sentCounter
         );
 
         assertEquals(
@@ -74,5 +84,8 @@ public class MessageGeneratorTest {
                 generatedMessages,
                 "Generated messages count does not match expected count"
         );
+
+        verify(producer, times(numberOfMessages))
+                .send(any(Message.class));
     }
 }
